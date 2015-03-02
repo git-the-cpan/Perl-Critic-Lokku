@@ -3,8 +3,11 @@ abstract: 'A collection of Perl::Critic policies from Lokku'
 author:
   - 'David D Lowe <flimm@cpan.org>'
 build_requires:
+  English: 0
   File::Basename: 0
+  File::Spec: 0
   Test::More: 0
+  Test::Perl::Critic: 0
   Test::Perl::Critic::Policy: 0
   perl: 5.006
 configure_requires:
@@ -20,8 +23,7 @@ requires:
   Perl::Critic::Policy: 0
   Perl::Critic::Utils: 0
   Readonly: 0
-  base: 0
-  strict: 0
-  utf8: 0
-  warnings: 0
-version: 0.001
+resources:
+  bugtracker: https://github.com/lokku/Perl-Critic-Lokku
+  repository: https://github.com/lokku/Perl-Critic-Lokku.git
+version: 0.002

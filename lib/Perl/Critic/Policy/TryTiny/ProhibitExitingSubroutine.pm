@@ -1,10 +1,11 @@
+package Perl::Critic::Policy::TryTiny::ProhibitExitingSubroutine;
+$Perl::Critic::Policy::TryTiny::ProhibitExitingSubroutine::VERSION = '0.002';
 use strict;
 use warnings;
 use utf8;
 
-package Perl::Critic::Policy::TryTiny::ProhibitExitingSubroutine;
 # ABSTRACT: Ban next/last/return in Try::Tiny blocks
-$Perl::Critic::Policy::TryTiny::ProhibitExitingSubroutine::VERSION = '0.001';
+
 use Readonly;
 use Perl::Critic::Utils qw( :severities :classification :ppi );
 
@@ -23,6 +24,21 @@ sub default_severity {
 
 sub default_themes {
     return qw(bugs);
+}
+
+sub prepare_to_scan_document {
+    my $self = shift;
+    my $document = shift;
+
+    return $document->find_any(sub {
+        my $element = $_[1];
+        return 0 if ! $element->isa('PPI::Statement::Include');
+        my @children = grep { $_->significant } $element->children;
+        if ($children[1] && $children[1]->isa('PPI::Token::Word') && $children[1] eq 'Try::Tiny') {
+            return 1;
+        }
+        return 0;
+    });
 }
 
 sub applies_to {
@@ -68,20 +84,47 @@ sub _check_block {
     my $self = shift;
     my $block = shift;
 
-    for my $word (@{ $block->find('PPI::Token::Word') || [] }) {
-        if ($word eq 'return') {
-            return $self->violation($DESC, $EXPL, $word);
-        }
+    my $violation;
 
-        my $sib = $word->snext_sibling;
+    my $wanted;
+    $wanted = sub {
+        my ($parent, $element, $in_for_loop, $in_sub_block) = @_;
+        $in_for_loop //= 0;
+        $in_sub_block //= 0;
 
-        if ($word eq 'next' || $word eq 'redo' || $word eq 'last') {
-            if (! $sib || ! _is_label($sib)) {
-                return $self->violation($DESC, $EXPL, $word);
+        if ($element->isa('PPI::Statement::Compound')) {
+            if ( $element->type eq 'for' || $element->type eq 'foreach') {
+                my ($subblock) = grep { $_->isa('PPI::Structure::Block') } $element->schildren;
+                $subblock->find_any(sub { $wanted->(@_, 1, $in_sub_block) });
+                return undef;
             }
         }
-    }
-    return;
+        elsif ($element->isa("PPI::Structure::Block")) {
+            my $prev_sib = $element->sprevious_sibling;
+            if ($prev_sib && $prev_sib->isa("PPI::Token::Word") && $prev_sib eq 'sub') {
+                $element->find_any(sub { $wanted->(@_, $in_for_loop, 1) });
+                return undef;
+            }
+        }
+        elsif ($element->isa('PPI::Token::Word')) {
+            if ($element eq 'return' && ! $in_sub_block) {
+                $violation = $self->violation($DESC, $EXPL, $element);
+                return 1;
+            }
+
+            my $sib = $element->snext_sibling;
+
+            if ($element eq 'next' || $element eq 'redo' || $element eq 'last') {
+                if (! $in_for_loop && (! $sib || ! _is_label($sib))) {
+                    $violation = $self->violation($DESC, $EXPL, $element);
+                    return 1;
+                }
+            }
+        }
+    };
+    $block->find_any($wanted);
+
+    return $violation;
 }
 
 sub _is_label {
@@ -108,7 +151,7 @@ Perl::Critic::Policy::TryTiny::ProhibitExitingSubroutine - Ban next/last/return 
 
 =head1 VERSION
 
-version 0.001
+version 0.002
 
 =head1 DESCRIPTION
 
@@ -127,8 +170,8 @@ Take this code:
         # other code
     }
 
-The next statement will not go the the next iteration of the for-loop, rather,
-it will exit the "try" block, emitting a warning if warnings are enabled.
+The next statement will not go to the next iteration of the for-loop, rather,
+it will exit the try block, emitting a warning if warnings are enabled.
 
 This is probably not what the developer had intended, so this policy prohibits it.
 
@@ -157,8 +200,8 @@ This Policy is not configurable except for the standard options.
 
 =head1 KNOWN BUGS
 
-This policy assumes that L<Try::Tiny> is being used, and doesn't check for
-whether an alternative like L<TryCatch>.
+This policy assumes that L<Try::Tiny> is being used, and it doesn't run if it
+can't find it being imported.
 
 =head1 AUTHOR
 
@@ -166,7 +209,7 @@ David D Lowe <flimm@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2014 by Lokku <cpan@lokku.com>.
+This software is copyright (c) 2015 by Lokku <cpan@lokku.com>.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

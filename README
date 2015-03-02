@@ -1,11 +1,11 @@
 
 
 This archive contains the distribution Perl-Critic-Lokku,
-version 0.001:
+version 0.002:
 
   A collection of Perl::Critic policies from Lokku
 
-This software is copyright (c) 2014 by Lokku <cpan@lokku.com>.
+This software is copyright (c) 2015 by Lokku <cpan@lokku.com>.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

@@ -1,9 +1,11 @@
+package Perl::Critic::Policy::TryTiny::RequireCatch;
+$Perl::Critic::Policy::TryTiny::RequireCatch::VERSION = '0.002';
 use strict;
 use warnings;
 use utf8;
-package Perl::Critic::Policy::TryTiny::RequireCatch;
+
 # ABSTRACT: Always include a "catch" block when using "try"
-$Perl::Critic::Policy::TryTiny::RequireCatch::VERSION = '0.001';
+
 use Readonly;
 use Perl::Critic::Utils qw( :severities :classification :ppi );
 
@@ -22,6 +24,21 @@ sub default_severity {
 
 sub default_themes {
     return qw(bugs);
+}
+
+sub prepare_to_scan_document {
+    my $self = shift;
+    my $document = shift;
+
+    return $document->find_any(sub {
+        my $element = $_[1];
+        return 0 if ! $element->isa('PPI::Statement::Include');
+        my @children = grep { $_->significant } $element->children;
+        if ($children[1] && $children[1]->isa('PPI::Token::Word') && $children[1] eq 'Try::Tiny') {
+            return 1;
+        }
+        return 0;
+    });
 }
 
 sub applies_to {
@@ -56,7 +73,7 @@ Perl::Critic::Policy::TryTiny::RequireCatch - Always include a "catch" block whe
 
 =head1 VERSION
 
-version 0.001
+version 0.002
 
 =head1 DESCRIPTION
 
@@ -94,8 +111,8 @@ This Policy is not configurable except for the standard options.
 
 =head1 KNOWN BUGS
 
-This policy assumes that L<Try::Tiny> is being used, and doesn't check for
-whether an alternative like L<TryCatch>.
+This policy assumes that L<Try::Tiny> is being used, and it doesn't run if it
+can't find it being imported.
 
 =head1 AUTHOR
 
@@ -103,7 +120,7 @@ David D Lowe <flimm@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2014 by Lokku <cpan@lokku.com>.
+This software is copyright (c) 2015 by Lokku <cpan@lokku.com>.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

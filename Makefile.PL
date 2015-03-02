@@ -23,18 +23,17 @@ my %WriteMakefileArgs = (
   "PREREQ_PM" => {
     "Perl::Critic::Policy" => 0,
     "Perl::Critic::Utils" => 0,
-    "Readonly" => 0,
-    "base" => 0,
-    "strict" => 0,
-    "utf8" => 0,
-    "warnings" => 0
+    "Readonly" => 0
   },
   "TEST_REQUIRES" => {
+    "English" => 0,
     "File::Basename" => 0,
+    "File::Spec" => 0,
     "Test::More" => 0,
+    "Test::Perl::Critic" => 0,
     "Test::Perl::Critic::Policy" => 0
   },
-  "VERSION" => "0.001",
+  "VERSION" => "0.002",
   "test" => {
     "TESTS" => "t/*.t"
   }
@@ -42,17 +41,16 @@ my %WriteMakefileArgs = (
 
 
 my %FallbackPrereqs = (
+  "English" => 0,
   "ExtUtils::MakeMaker" => 0,
   "File::Basename" => 0,
+  "File::Spec" => 0,
   "Perl::Critic::Policy" => 0,
   "Perl::Critic::Utils" => 0,
   "Readonly" => 0,
   "Test::More" => 0,
-  "Test::Perl::Critic::Policy" => 0,
-  "base" => 0,
-  "strict" => 0,
-  "utf8" => 0,
-  "warnings" => 0
+  "Test::Perl::Critic" => 0,
+  "Test::Perl::Critic::Policy" => 0
 );
 
 

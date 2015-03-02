@@ -2,6 +2,7 @@
 Changes
 LICENSE
 MANIFEST
+META.json
 META.yml
 Makefile.PL
 README
@@ -12,6 +13,8 @@ lib/Perl/Critic/Policy/TryTiny/RequireCatch.pm
 t/TryTiny/ProhibitExitingSubroutine.run
 t/TryTiny/RequireCatch.run
 t/changes.t
+t/perlcritic.t
+t/perlcriticrc
 t/pod.t
 t/release-kwalitee.t
 t/run.t
